@@ -4,7 +4,6 @@ Hiện tại trên mạng cũng có khá nhiều<strong> plugin lấy tin tự �
 <h2>Demo plugin get tin tự động:</h2>
 <img class="aligncenter wp-image-2577 size-full" src="http://huykira.net/wp-content/uploads/2016/12/plugin-lay-tin-tu-dong.png" alt="Plugin lấy tin tự động" width="1197" height="622" />
 <p style="text-align: center;"><em>Đây là giao diện chính khi cài plugin lên</em></p>
-<iframe width="100%" height="500" style="border: none; overflow: hidden;" src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fhuykiradotnet%2Fvideos%2F1588442561169657%2F&amp;show_text=0&amp;width=560" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="allowfullscreen"></iframe>
 <p style="text-align: center;"><em>Video chạy demo <strong>plugin lấy tin tự động</strong> từ vnexpress.net</em></p>
 
 <h2 style="text-align: left;">Một số tính năng của plugin lấy tin tự động:</h2>
