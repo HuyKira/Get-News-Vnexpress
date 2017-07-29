@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Get News VNexpress.Net
-Plugin URI: http://www.huykira.net
+Plugin URI: https://huykira.net/webmaster/wordpress/plugin-lay-tin-tu-dong-tu-vnexpress-net.html
 Description: Plugin get News VNexpress.Net by Huy Kira
 Author: Huy Kira
 Version: 1.0
@@ -15,64 +15,71 @@ if ( !function_exists( 'add_action' ) ) {
 define('HK_VNEXPRESS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HK_VNEXPRESS_PLUGIN_RIR', plugin_dir_path(__FILE__));
 require_once( ABSPATH . "wp-includes/pluggable.php" );
-require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
-	add_action('admin_menu', 'add_menu_hk');
-	function add_menu_hk() {
+if (!class_exists('simple_html_dom_node')) {
+	require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
+}
+	add_action('admin_menu', 'gnv_add_menu_hk');
+	function gnv_add_menu_hk() {
 		add_menu_page( 
         	__( 'Get News Vnexpress', 'textdomain' ),
 		        'News Vnexpress',
 		        'manage_options',
 		        'hk_news_vnexppress',
-		        'create_page',
+		        'gnv_create_page',
 		        'dashicons-index-card'
 			);
-		add_action( 'admin_init', 'register_mysettings' );
+		add_action( 'admin_init', 'gnv_register_mysettings' );
     };
-    function register_mysettings() {
-		register_setting( 'my-settings-group', 'add_menu_hk' );
+    function gnv_register_mysettings() {
+		register_setting( 'my-settings-group', 'gnv_add_menu_hk' );
 		register_setting( 'my-settings-group', 'some_other_option' );
 		register_setting( 'my-settings-group', 'option_etc' );
 	}
 
-    function custom_style() {
+    function gnv_custom_style() {
 	   wp_enqueue_style( 'boots_css', HK_VNEXPRESS_PLUGIN_URL.'scripts/css/bootstrap.min.css', false, '1.0.0' );
 	   wp_enqueue_style( 'custom_css', HK_VNEXPRESS_PLUGIN_URL.'scripts/css/style.css', false, '1.0.0' );
-	   wp_enqueue_script( 'diemthi_jquery_js', HK_VNEXPRESS_PLUGIN_URL.'scripts/js/jquery-2.2.3.min.js', true, '1.0.0' );
 	   wp_enqueue_script( 'boots_js', HK_VNEXPRESS_PLUGIN_URL.'scripts/js/bootstrap.min.js', true, '1.0.0' );
 	   wp_enqueue_script( 'custom_js', HK_VNEXPRESS_PLUGIN_URL.'scripts/js/custom.js', true, '1.0.0' );
 	}
-	if(curPageURL()==get_bloginfo("url").'/wp-admin/admin.php?page=hk_news_vnexppress') {
-	add_action( 'admin_enqueue_scripts', 'custom_style' );
+	if(gnv_curPageURL()==admin_url('admin.php?page=hk_news_vnexppress')) {
+	add_action( 'admin_enqueue_scripts', 'gnv_custom_style' );
 	}
-	if(curPageURL()==get_bloginfo("url").'/wp-admin/admin.php?page=hk_news_vnexppress&settings-updated=true') {
-	add_action( 'admin_enqueue_scripts', 'custom_style' );
+	if(gnv_curPageURL()==admin_url('admin.php?page=hk_news_vnexppress&settings-updated=true')) {
+	add_action( 'admin_enqueue_scripts', 'gnv_custom_style' );
 	}
 
-	function create_page() { ?>
-		<?php $options = get_option( 'add_menu_hk' ); ?>
+	function gnv_create_page() { ?>
+		<?php $options = get_option( 'gnv_add_menu_hk' ); ?>
 
     	<div class="wrap tp-app">
 		    <h2>Lấy bài viết từ VNEXPRESS.NET</h2>
 		    <br>
     		<div class="col-xs-12 col-sm-12 col-md-6">
 				<form name="post" action="" method="post" id="post" autocomplete="off">
+					<?php wp_nonce_field('get_new_express'); ?>
 					<div class="row">
 						<div class="input-muti">  
 							<div class="form-group">
 								<label for="link">Nhập link bài viết</label>
-								<input required="required" name="link[]" type="url" class="form-control" id="" placeholder="Nhập link vào đây" value="<?php if(isset($_POST['link'])) { echo $_POST['link'][0]; } ?>">
+								<input required="required" name="link[]" type="url" class="form-control" id="" placeholder="Nhập link vào đây" value="<?php if(isset($_POST['link'])) { echo sanitize_text_field($_POST['link'][0]); } ?>">
 								<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 							</div>
 						</div>
 						<div class="list-input">
                             <?php if(isset($_POST['add_post']) and ($_POST['add_post'] == 'true')){
-                                foreach ($_POST['link'] as $key => $value) { if ($key==0) {} else { ?>
-                                <div class="form-group">
-                                    <label for="link">Nhập link</label>
-                                    <input required="required" name="link[]" type="url" class="form-control" value="<?php echo $value; ?>">
-                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                            	$links = $_POST['link'];
+                            	if (is_array($links)) {
+						            foreach ($links as &$link) {
+						                $link = sanitize_text_field($link);
+						            }
+	                                foreach ($links as $key => $value) { if ($key==0) {} else { ?>
+	                                <div class="form-group">
+	                                    <label for="link">Nhập link</label>
+	                                    <input required="required" name="link[]" type="url" class="form-control" value="<?php echo $value; ?>">
+	                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                                 </div>       
-                            <?php } } } ?>
+                            <?php } } } } ?>
                         </div>
                         <div class="more">
                             <span class="click-more">Thêm link</span>
@@ -87,8 +94,12 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 		                                    'taxonomy' => 'category',
 		                                    ); 
 		                                    $cates = get_categories( $args ); 
-		                                    foreach ( $cates as $cate ) {  ?>
-		                                        <option value="<?php echo $cate->term_id; ?>" <?php if($_POST['cat'] == $cate->term_id) {echo 'selected'; } ?>><?php echo $cate->name; ?></option>
+		                                    foreach ( $cates as $cate ) { 
+		                                    	if (isset($_POST['cat'])){
+		                                    		$cat_id = sanitize_text_field($_POST['cat']); 
+		                                    	} 
+		                                ?>
+		                                        <option value="<?php echo $cate->term_id; ?>" <?php if($cat_id == $cate->term_id) {echo 'selected'; } ?>><?php echo $cate->name; ?></option>
 		                                <?php } ?>
 		                                <!-- Get category -->
 		                            </select>
@@ -98,8 +109,8 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
                         		<div class="form-group">
 		                            <label for="cat">Chọn trạng thái</label>
 		                            <select name="status" id="input" class="form-control" required="required">
-		                                <option value="Pending" <?php if($_POST['status'] == 'Pending') {echo 'selected'; } ?>>Xét duyệt</option>
-		                                <option value="Publish" <?php if($_POST['status'] == 'Publish') {echo 'selected'; } ?>>Đăng luôn</option>
+		                                <option value="Pending" <?php if(sanitize_text_field($_POST['status']) == 'Pending') {echo 'selected'; } ?>>Xét duyệt</option>
+		                                <option value="Publish" <?php if(sanitize_text_field($_POST['status']) == 'Publish') {echo 'selected'; } ?>>Đăng luôn</option>
 		                            </select>
 		                        </div>
                         	</div>
@@ -110,10 +121,23 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 				        </div>
 				        <?php 
 					    	if(isset($_POST['add_post']) and ($_POST['add_post'] == 'true')){
-							    $cat = $_POST['cat'];
-							    $status = $_POST['status'];
-							    foreach ($_POST['link'] as $key => $value) {
-							       	get($value,$cat,$status);
+							    if(isset($_POST['cat'])){
+							    	$cat = sanitize_text_field($_POST['cat']);
+							    	if(isset($_POST['status'])){
+								    	$status = sanitize_text_field($_POST['status']);
+								    	if(isset($_POST['link'])){
+									    	$links = $_POST['link'];
+									    	if (is_array($links)) {
+									            foreach ($links as &$link) {
+									                $link = sanitize_text_field($link);
+									            }
+									            foreach ($links as $key => $value) {
+											       	qnv_get_express($value,$cat,$status);
+											    }
+									        }
+									    }
+								    }
+								    
 							    }
 							}
 					    ?>
@@ -124,13 +148,13 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 						<form action="options.php" method="POST" role="form">
 			    			<?php settings_fields( 'my-settings-group' ); ?>
 			    			<?php do_settings_sections( 'my-settings-group' ); ?>
-							<p><input type="checkbox" id="add_menu_hk[cmt]" name="add_menu_hk[cmt]" value="1" <?php if(isset($options['cmt'])) {echo 'checked';} ?>/> <label for="add_menu_hk[cmt]">Bật chức năng thảo luận</label></p>
+							<p><input type="checkbox" id="gnv_add_menu_hk[cmt]" name="gnv_add_menu_hk[cmt]" value="1" <?php if(isset($options['cmt'])) {echo 'checked';} ?>/> <label for="gnv_add_menu_hk[cmt]">Bật chức năng thảo luận</label></p>
 							<p class="kiki">Loại bỏ nội dung lấy về bằng cách thêm các <strong>vùng chọn (class, id...)</strong> vào các textbox bên dưới! </p>
 							<div class="row">
 								<div class="option-list">
 									<div class="col-xs-12 col-sm-12 col-md-6">
 										<div class="input-hk form-group">
-											<input type="text" class="form-control" name="add_menu_hk[list-op][]" value="<?php if(isset($options['list-op'][0])) {echo $options['list-op'][0];} ?>">
+											<input type="text" class="form-control" name="gnv_add_menu_hk[list-op][]" value="<?php if(isset($options['list-op'][0])) {echo $options['list-op'][0];} ?>">
 											<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 										</div>
 									</div>
@@ -141,7 +165,7 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 											<?php if($key==0){} else { ?>
 												<div class="col-xs-12 col-sm-12 col-md-6">
 													<div class="input-hk form-group">
-														<input type="text" class="form-control" name="add_menu_hk[list-op][]" value="<?php echo $value; ?>">
+														<input type="text" class="form-control" name="gnv_add_menu_hk[list-op][]" value="<?php echo $value; ?>">
 														<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 													</div>
 												</div>
@@ -183,22 +207,22 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 			    <h2>Thảo luận về plugin</h2>
 			    <br>
 	        	<div class="cmt">
-	        		<div class="fb-comments" data-width="100%" data-href="http://huykira.net/webmaster/wordpress/plugin-lay-tin-tu-dong-tu-vnexpress-net.html" data-numposts="3"></div>
+	        		<div class="fb-comments" data-width="100%" data-href="https://huykira.net/webmaster/wordpress/plugin-lay-tin-tu-dong-tu-vnexpress-net.html" data-numposts="3"></div>
 	        	</div>
 	        	<div id="fb-root"></div>
 			</div>
 		<?php } ?>
 	<?php }
-		function get($link,$cat,$status) {  
+		function qnv_get_express($link,$cat,$status) {  
 		    $url = $link;
 		    $web = explode('/', $url)[2];
-		    if(!check_link_die($url)) { ?>
+		    if(!gnv_check_link_die($url)) { ?>
 				<div class="clear"></div>
 				<br>
 				<div class="alert alert-danger">
-				    <p><?php echo $url; ?> - Link không tồn tại!</p>
+				    <p><?php echo $url; ?> - Link không tồn tại hoặc lỗi!</p>
 				</div>
-		    <?php } else if($web == 'vnexpress.net' or $web == 'kinhdoanh.vnexpress.net' or 'giaitri.vnexpress.net' or 'thethao.vnexpress.net' or 'suckhoe.vnexpress.net' or 'giadinh.vnexpress.net' or 'dulich.vnexpress.net' or 'sohoa.vnexpress.net' or 'raovat.vnexpress.net') {
+		    <?php } else if($web == 'vnexpress.net' or $web == 'kinhdoanh.vnexpress.net' or $web == 'giaitri.vnexpress.net' or $web == 'thethao.vnexpress.net' or $web == 'suckhoe.vnexpress.net' or $web == 'giadinh.vnexpress.net' or $web == 'dulich.vnexpress.net' or $web == 'sohoa.vnexpress.net' or $web == 'raovat.vnexpress.net') {
 			    $html = file_get_html($url);
 			    $options = get_option( 'add_menu_hk' );
 			    if(isset($options['list-op'])) { 
@@ -295,7 +319,7 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 			      'post_author'   => 1,
 			      'post_category' => array($cat)
 			    );
-			    if(check_link($url)) { ?>
+			    if(gnv_check_link($url)) { ?>
 			    	<div class="clear"></div>
 					<br>
 					<div class="alert alert-danger">
@@ -349,7 +373,7 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 		$res2= set_post_thumbnail( $post_id, $attach_id );
 	}
 
-	function curPageURL() {
+	function gnv_curPageURL() {
 		$pageURL = 'http';
 		if (!empty($_SERVER['HTTPS'])) {
 		  if ($_SERVER['HTTPS'] == 'on') {
@@ -365,7 +389,7 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 		return $pageURL;
 	}
 
-	function get_meta_values($key = '', $type = 'post') {
+	function gnv_get_meta_values($key = '', $type = 'post') {
 		global $wpdb;
 		if(empty($key)) return;
 		$r = $wpdb->get_col($wpdb->prepare("
@@ -377,8 +401,8 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 		return $r;
 	}
 	
-	function check_link($link) {
-		$meta_links = get_meta_values("link_get_content");
+	function gnv_check_link($link) {
+		$meta_links = gnv_get_meta_values("link_get_content");
 		$i = 0;
 		foreach ($meta_links as $value) {
 			if($value == $link){
@@ -392,19 +416,13 @@ require_once(HK_VNEXPRESS_PLUGIN_RIR . 'includes/simple_html_dom.php');
 		}
 	}
 
-	function check_link_die($url=NULL) 
+	function gnv_check_link_die($url=NULL) 
 	{ 
 		if($url == NULL) return false; 
-		$ch = curl_init($url); 
-		curl_setopt($ch, CURLOPT_TIMEOUT, 5); 
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); 
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-		$data = curl_exec($ch); 
-		$httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);//lay code tra ve cua http 
-		curl_close($ch); 
-		if($httpcode>=200 && $httpcode<300){ 
-		return true; 
+		$response = wp_remote_retrieve_response_code( wp_remote_get( $url, array( 'timeout' => 120, 'httpversion' => '1.1' )) );
+		if($response!=200){ 
+			return false; 
 		} else { 
-		return false; 
+			return true; 
 		} 
 	}
