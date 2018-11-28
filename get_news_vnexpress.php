@@ -4,7 +4,7 @@ Plugin Name: Get News VNexpress.Net
 Plugin URI: https://huykira.net/webmaster/wordpress/plugin-lay-tin-tu-dong-tu-vnexpress-net.html
 Description: Plugin get News VNexpress.Net by Huy Kira
 Author: Huy Kira
-Version: 1.0
+Version: 1.2
 Author URI: http://www.huykira.net
 */
 if ( !function_exists( 'add_action' ) ) {
@@ -304,7 +304,7 @@ if (!class_exists('simple_html_dom_node')) {
 			    	$value->outertext = '';
 			    }
 			    $html ->load($html ->save());
-			    $tieude = $html->find('.title_news h1',0);
+			    $tieude = $html->find('.title_news_detail',0);
 			    $img = $html->find('.fck_detail img',0)->src;
 			    if($html->find('.fck_detail',0)!= null) {
 			    	$noidung = $html->find('.fck_detail',0);
@@ -374,19 +374,8 @@ if (!class_exists('simple_html_dom_node')) {
 	}
 
 	function gnv_curPageURL() {
-		$pageURL = 'http';
-		if (!empty($_SERVER['HTTPS'])) {
-		  if ($_SERVER['HTTPS'] == 'on') {
-		    $pageURL .= "s";
-		  }
-		}
-		$pageURL .= "://";
-		if ($_SERVER["SERVER_PORT"] != "80") {
-		$pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
-		} else {
-		$pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-		}
-		return $pageURL;
+		$pageURL = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    	return $pageURL;
 	}
 
 	function gnv_get_meta_values($key = '', $type = 'post') {
